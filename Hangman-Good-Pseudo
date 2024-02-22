@@ -1,0 +1,148 @@
+BEGIN getRandomWord(wordList)
+# This function returns a random string from the passed list of strings.
+wordIndex = getRandom(0, len(wordList) - 1)
+return wordList[wordIndex]
+END getRandomWord
+
+BEGIN displayBoard(HANGMANPICS, missedLetters, correctLetters, secretWord)
+DISPLAY HANGMANPICS[len(missedLetters)]
+DISPLAY empty line
+
+DISPLAY 'Missed letters:', end=' '
+FOR i = 0 TO length of missedLetters STEP = 1
+    DISPLAY missedLetters[i] and a space without a newline
+NEXT i
+DISPLAY empty line
+
+blanks = '_' * len(secretWord)
+
+FOR i =0 TO length of secretWord STEP 1 # replace blanks with correctly guessed letters
+    IF secretWord[i] in correctLetters THEN
+        blanks = blanks[:i] + secretWord[i] + blanks[i+1:]
+    END IF
+NEXT i
+
+FOR i = 0 TO length of blanks STEP = 1
+    DISPLAY blanks[i] and a space without a newline
+NEXT i
+DISPLAY empty line
+END displayBoard
+
+BEGIN getGuess(alreadyGuessed)
+# Returns the letter the player entered. This function makes sure the player entered a
+single letter, and not something else.
+WHILE True
+    DISPLAY 'Guess a letter.'
+    guess = input()
+    guess = guess.lower()
+    IF len(guess) != 1 THEN
+        DISPLAY 'Please enter a single letter.'
+    ELSE
+
+        IF guess in alreadyGuessed THEN
+            DISPLAY 'You have already guessed that letter. Choose again.'
+        ELSE
+            IF guess not in 'abcdefghijklmnopqrstuvwxyz' THEN
+                DISPLAY 'Please enter a LETTER.'
+            ELSE
+                return guess
+            END IF
+        END IF
+    END IF
+END WHILE
+END getGuess
+
+BEGIN playAgain()
+# This function returns True IF the player wants to play again, otherwise it returns False.
+DISPLAY 'Do you want to play again? (yes or no)'
+GET input
+IF input starts with a 'y' THEN
+    return TRUE
+ELSE
+    return FALSE
+END IF
+END playAgain
+
+BEGIN gameSetup()
+DISPLAY 'H A N G M A N'
+HANGMANPICS = 
+words = split the string [ant baboon badger bat bear beaver camel cat clam cobra cougar
+coyote crow deer dog donkey duck eagle ferret fox frog goat goose hawk lion lizard llama
+mole monkey moose mouse mule newt otter owl panda parrot pigeon python rabbit ram rat raven
+rhino salmon seal shark sheep skunk sloth snake spider stork swan tiger toad trout turkey
+turtle weasel whale wolf wombat zebra] # into an array
+
+missedLetters = ''
+correctLetters = ''
+secretWord = getRandomWord(words)
+win = False
+lose = False
+return missedLetters, correctLetters, secretWord, win, lose, words, HANGMANPICS
+END gameSetup
+
+BEGIN manageCorrect(guess, correctLetters, secretWord)
+correctLetters = correctLetters + guess
+
+# Check 
+IF the player has won
+    win = True
+    FOR i=0 to the length of secretWord STEP = 1
+        IF secretWord[i] not in correctLetters THEN
+            win = False
+            break
+        END IF
+    NEXT i
+return win, correctLetters
+END manageCorrect
+
+BEGIN manageFail(missedLetters, guess, HANGMANPICS)
+missedLetters = missedLetters + guess
+lose = False
+# Check 
+IF player has guessed too many times and lost
+    IF len(missedLetters) == len(HANGMANPICS) - 1 THEN
+        lose = True
+    END IF
+return lose, missedLetters
+END manageFail
+
+BEGIN manageWin(secretWord)
+DISPLAY 'Yes! The secret word is "' + secretWord + '"! You have won!'
+END manageWin
+
+BEGIN manangeLoss(missedLetters, correctLetters, secretWord)
+DISPLAY 'You have run out of guesses!\nAfter ' + str(len(missedLetters)) + ' missed guesses
+and ' + str(len(correctLetters)) +'' correct guesses, the word was "' + secretWord + '"'
+END manangeLoss
+
+
+
+BEGIN main
+#initial setup stuff
+missedLetters, correctLetters, secretWord, win, lose, words, HANGMANPICS = gameSetup()
+
+WHILE not (win or lose)
+    displayBoard(HANGMANPICS, missedLetters, correctLetters, secretWord)
+
+# Let the player type in a letter.
+guess = getGuess(missedLetters + correctLetters)
+
+IF guess in secretWord:
+    win, correctLetters = manageCorrect(guess, correctLetters, secretWord)
+ELSE
+    lose, missedLetters = manageFail(missedLetters, guess, HANGMANPICS)
+END IF
+
+# Ask the player IF they want to play again (but only IF the game is done).
+IF win or lose THEN
+    displayBoard(HANGMANPICS, missedLetters, correctLetters, secretWord)
+    IF win THEN
+        manageWin(secretWord)
+    ELSE
+        manangeLoss(missedLetters, correctLetters, secretWord)
+    IF playAgain() THEN
+        missedLetters, correctLetters, secretWord, win, lose, words, HANGMANPICS = gameSetup()
+        END IF
+    END IF
+END WHILE
+END main
